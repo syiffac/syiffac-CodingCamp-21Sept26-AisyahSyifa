@@ -233,7 +233,7 @@ body {
 
 /* Sun icon for dark mode */
 [data-theme="dark"] .theme-toggle__icon {
-    content: "â˜€ï¸";
+    content: "☀️";
 }
 
 /* ===================================
@@ -1144,11 +1144,8 @@ body {
         min-width: 150px;
     }
 
-    .form__group:last-child {
-        flex: 0 0 100%;
-    }
-
     .form__submit {
+        flex-basis: 100%;
         width: 100%;
     }
 
@@ -1335,4 +1332,3 @@ body {
 .mb-sm { margin-bottom: var(--spacing-sm); }
 .mb-md { margin-bottom: var(--spacing-md); }
 .mb-lg { margin-bottom: var(--spacing-lg); }
-
