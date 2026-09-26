@@ -559,6 +559,49 @@ const ExpenseTracker = (function() {
     }
 
     /**
+     * Show or hide the text-based category breakdown.
+     * Used when Chart.js is unavailable (CDN blocked, offline, ...)
+     * @param {boolean} show - True to show the text list instead of the chart
+     */
+    function setChartFallbackVisible(show) {
+        const fallbackEl = document.getElementById('chart-fallback');
+        const canvas = document.getElementById('expense-chart');
+        if (fallbackEl) fallbackEl.hidden = !show;
+        if (canvas) {
+            canvas.hidden = show;
+            if (canvas.parentElement) canvas.parentElement.hidden = show;
+        }
+    }
+
+    /**
+     * Render the text-based category breakdown shown when the chart
+     * cannot be drawn.
+     * @param {Object} breakdown - Category totals with amounts/percentages
+     */
+    function renderChartFallback(breakdown) {
+        const listEl = document.getElementById('category-breakdown-list');
+        if (!listEl) return;
+
+        const rows = Object.keys(breakdown).sort().filter(function(category) {
+            return breakdown[category].amount > 0;
+        }).map(function(category) {
+            return (
+                '<li class="chart-fallback__item">' +
+                    '<span>' + escapeHtml(category) + '</span>' +
+                    '<span>' + formatCurrency(breakdown[category].amount) +
+                        ' (' + breakdown[category].percentage.toFixed(1) + '%)</span>' +
+                '</li>'
+            );
+        });
+
+        listEl.innerHTML = rows.length > 0
+            ? rows.join('')
+            : '<li class="chart-fallback__item"><span>No spending yet</span><span>$0.00 (0.0%)</span></li>';
+
+        setChartFallbackVisible(true);
+    }
+
+    /**
      * Initialize or update the pie chart
      * Requirements traced: 5.1, 5.2, 5.3, 5.4, 5.5
      */
@@ -570,6 +613,17 @@ const ExpenseTracker = (function() {
         }
 
         const breakdown = getCategoryTotals();
+
+        // Chart.js is loaded from a CDN and may be unavailable; the rest of
+        // the UI must keep working, so fall back to a text breakdown.
+        if (typeof Chart === 'undefined') {
+            console.warn('Chart.js not available - showing text breakdown');
+            renderChartFallback(breakdown);
+            return;
+        }
+
+        setChartFallbackVisible(false);
+
         const categories = Object.keys(breakdown).sort();
         const amounts = categories.map(function(cat) { return breakdown[cat].amount; });
         const colors = categories.map(function(cat, index) {
