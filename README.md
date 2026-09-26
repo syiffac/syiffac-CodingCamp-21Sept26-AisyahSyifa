@@ -1,5 +1,7 @@
 # Expense & Budget Visualizer
 
+**🟢 Live Demo: https://syiffac.github.io/syiffac-CodingCamp-21Sept26-AisyahSyifa/**
+
 A mobile-friendly web application for tracking daily spending, visualizing expenses by category, and managing a monthly spending budget. The application operates entirely client-side using browser Local Storage for data persistence—no backend infrastructure required.
 
 ## Features
@@ -15,6 +17,7 @@ A mobile-friendly web application for tracking daily spending, visualizing expen
 - **Spending Limit**: Set a monthly budget with progress bar and warning when over limit
 - **Theme Toggle**: Switch between light and dark modes with preference persistence
 - **Data Persistence**: All data automatically saved to browser Local Storage and persists between sessions
+- **Demo Data**: A "Load Demo Data" button (or `ExpenseTracker.seedDemoData()`) fills the app with 16 sample transactions spanning the last three months, two custom categories, and a spending limit—handy for exploring the UI. It asks for confirmation before replacing existing data.
 - **Input Validation**: Comprehensive validation for all form inputs with user-friendly error messages
 - **Responsive Design**: Mobile-first design that works on all screen sizes (320px and up)
 
@@ -47,10 +50,20 @@ revou/
 ├── js/
 │   └── app.js           # Single JavaScript file with all functionality
 ├── tests/
-│   ├── checkpoint.test.js        # Comprehensive test suite
-│   └── validation.test.js        # Validation tests
+│   ├── checkpoint.test.js        # Comprehensive test suite (Jest)
+│   ├── validation.test.js        # Validation tests
+│   ├── calculator.test.js        # Calculation tests
+│   └── deletion.test.js          # Deletion tests
 └── README.md            # Project documentation
 ```
+
+## Live Demo
+
+The app is published on GitHub Pages:
+
+**https://syiffac.github.io/syiffac-CodingCamp-21Sept26-AisyahSyifa/**
+
+No installation required—open the link and start adding expenses, or click **Load Demo Data** to explore it with sample data.
 
 ## Technology Stack
 
@@ -81,6 +94,9 @@ All features work in modern browsers that support:
 1. Clone the repository
 2. Open `index.html` in a web browser
 3. No build process, dependencies, or server setup required!
+
+Or skip installation entirely and use the
+[live demo](https://syiffac.github.io/syiffac-CodingCamp-21Sept26-AisyahSyifa/).
 
 ### Usage
 
@@ -115,6 +131,12 @@ All features work in modern browsers that support:
 7. **Select a Month**:
    - Use the month selector to view spending for different months
    - The monthly summary updates automatically
+
+8. **Load Demo Data**:
+   - Click "Load Demo Data" next to the Transactions heading
+   - The app is filled with 16 sample transactions from the last three months
+   - Existing data is only replaced after you confirm
+   - Same thing from the console: `ExpenseTracker.seedDemoData()`
 
 ## Validation Rules
 
@@ -154,7 +176,9 @@ All features work in modern browsers that support:
 - Chart.js pie chart automatically updates on transaction changes
 - All predefined categories displayed even with 0 spending
 - Dynamic colors assigned to custom categories
-- Chart respects theme changes
+- Chart respects theme changes (colors read from CSS after the theme is applied)
+- If Chart.js cannot be loaded (CDN blocked/offline), a text-based category
+  breakdown is shown instead and the rest of the app keeps working
 
 ### Data Calculations
 - Category totals calculated dynamically from transaction list
@@ -208,7 +232,19 @@ The `checkpoint.test.js` file includes comprehensive tests covering:
 
 ### Running Tests
 
-Tests are written to be framework-independent. They use Jest syntax but include DOM mocks for browser independence.
+```bash
+# Checkpoint suite (32 tests, Jest syntax)
+npx -y jest@30 tests/checkpoint.test.js --config '{"testEnvironment":"node"}'
+
+# Standalone suites (no framework needed)
+node tests/validation.test.js   # 40 tests
+node tests/calculator.test.js   # 24 tests
+node tests/deletion.test.js     # 10 tests
+```
+
+The checkpoint suite loads `js/app.js` with mocks for `document`, `localStorage`
+and `Chart`, so it runs in Node without a browser. The other suites are
+framework-independent and print their own results.
 
 ## Known Limitations
 
@@ -251,7 +287,8 @@ The `app.js` file is organized into logical sections using comments:
 12. Monthly Summary
 13. Spending Limit
 14. Theme Management
-15. Initialization
+15. Demo Data
+16. Initialization
 
 ### Module Pattern
 
@@ -272,6 +309,7 @@ The `ExpenseTracker` object exposes:
 - Monthly: `getMonthlyData()`, `getMonthlyBreakdown()`, `renderMonthlySummary()`
 - Limit: `setSpendingLimit()`, `updateSpendingLimitDisplay()`
 - Theme: `setTheme()`, `toggleTheme()`, `applyTheme()`
+- Demo data: `seedDemoData()`, `buildDemoTransactions()`
 - Validation: `validateName()`, `validateAmount()`, `validateCategory()`, `validateForm()`
 
 ## CSS Variables Reference
@@ -294,6 +332,7 @@ The application uses CSS custom properties for theming:
 2. **Clear All Data**: `localStorage.removeItem('expenseVisualizer')`
 3. **Check State**: `ExpenseTracker.getState()`
 4. **Add Transaction**: `ExpenseTracker.addTransaction({name: 'Test', amount: '10', category: 'Food'})`
+5. **Load Demo Data**: `ExpenseTracker.seedDemoData()`
 
 ## Responsive Design Breakpoints
 
@@ -331,6 +370,7 @@ For issues or questions about the application, please refer to the test files fo
 
 ---
 
-**Last Updated**: 2024
-**Version**: 1.0.0
+**Live Demo**: https://syiffac.github.io/syiffac-CodingCamp-21Sept26-AisyahSyifa/
+**Last Updated**: September 2026
+**Version**: 1.1.0
 **Status**: Complete ✅
