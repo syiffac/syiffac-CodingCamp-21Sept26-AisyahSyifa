@@ -1,4 +1,4 @@
-/* ===================================
+﻿/* ===================================
    Expense Tracker - Mobile-First CSS
    =================================== */
 
@@ -233,7 +233,7 @@ body {
 
 /* Sun icon for dark mode */
 [data-theme="dark"] .theme-toggle__icon {
-    content: "☀️";
+    content: "â˜€ï¸";
 }
 
 /* ===================================
@@ -1149,9 +1149,7 @@ body {
     }
 
     .form__submit {
-        flex: 0 0 100%;
-        max-width: 200px;
-        margin: 0 auto;
+        width: 100%;
     }
 
     /* Category add - inline */
@@ -1337,3 +1335,4 @@ body {
 .mb-sm { margin-bottom: var(--spacing-sm); }
 .mb-md { margin-bottom: var(--spacing-md); }
 .mb-lg { margin-bottom: var(--spacing-lg); }
+
