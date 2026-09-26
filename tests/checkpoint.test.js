@@ -82,12 +82,34 @@ const mockDOM = () => {
 
 mockDOM();
 
+// Load the application code (app.js is browser-side, so evaluate it here
+// and expose the ExpenseTracker module to the tests)
+const fs = require('fs');
+const path = require('path');
+const appCode = fs.readFileSync(path.join(__dirname, '..', 'js', 'app.js'), 'utf-8');
+const ExpenseTracker = new Function(
+    appCode + '\n; return ExpenseTracker;'
+)();
+
 // ==========================================
 // CHECKPOINT TEST SUITE (Task 13)
 // ==========================================
 
 describe('Expense Tracker - Core Functionality Checkpoint', () => {
-    
+    // Start every test from a clean app state. Clearing localStorage alone is
+    // not enough: the module keeps its state in memory between tests.
+    beforeEach(() => {
+        mockLocalStorage.clear();
+        ExpenseTracker.updateState({
+            transactions: [],
+            customCategories: [],
+            spendingLimit: null,
+            theme: 'light',
+            sortOrder: 'date-desc',
+            selectedMonth: null
+        });
+    });
+
     describe('1. State Management', () => {
         test('should initialize with empty state', () => {
             const state = ExpenseTracker.getState();

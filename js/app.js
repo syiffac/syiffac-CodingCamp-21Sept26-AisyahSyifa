@@ -883,9 +883,9 @@ const ExpenseTracker = (function() {
                     const amount = breakdown[category].amount;
                     const percentage = breakdown[category].percentage.toFixed(1);
                     return (
-                        '<div class="monthly-summary__item">' +
-                            '<span class="monthly-summary__item-label">' + escapeHtml(category) + '</span>' +
-                            '<span class="monthly-summary__item-value">' + formatCurrency(amount) + ' (' + percentage + '%)</span>' +
+                        '<div class="monthly-summary__breakdown-item">' +
+                            '<span class="monthly-summary__breakdown-category">' + escapeHtml(category) + '</span>' +
+                            '<span class="monthly-summary__breakdown-amount">' + formatCurrency(amount) + ' (' + percentage + '%)</span>' +
                         '</div>'
                     );
                 }).join('');
@@ -968,8 +968,10 @@ const ExpenseTracker = (function() {
      */
     function setTheme(theme) {
         if (theme === 'light' || theme === 'dark') {
-            updateState({ theme: theme });
+            // Apply the theme first: rendering below reads colors from CSS,
+            // otherwise the chart keeps the previous theme's colors.
             applyTheme(theme);
+            updateState({ theme: theme });
         }
     }
 
@@ -979,6 +981,96 @@ const ExpenseTracker = (function() {
     function toggleTheme() {
         const newTheme = state.theme === 'light' ? 'dark' : 'light';
         setTheme(newTheme);
+    }
+
+    // ==========================================
+    // DEMO DATA (dummy data seeding)
+    // ==========================================
+
+    const DEMO_CUSTOM_CATEGORIES = ['Shopping', 'Bills'];
+    const DEMO_SPENDING_LIMIT = 600;
+
+    /**
+     * Sample transactions template.
+     * monthOffset: 0 = current month, 1 = previous month, 2 = two months ago
+     * Days are kept <= 26 so they never roll over into the next month.
+     * @type {Array<Object>}
+     */
+    const DEMO_TRANSACTIONS_TEMPLATE = [
+        // Current month
+        { monthOffset: 0, day: 3,  name: 'Coffee & Pastry',        amount: 4.75,   category: 'Food' },
+        { monthOffset: 0, day: 6,  name: 'Bus Ticket',             amount: 2.50,   category: 'Transport' },
+        { monthOffset: 0, day: 9,  name: 'Weekly Groceries',       amount: 41.30,  category: 'Food' },
+        { monthOffset: 0, day: 12, name: 'Streaming Subscription', amount: 11.99,  category: 'Bills' },
+        { monthOffset: 0, day: 17, name: 'Cinema Night',           amount: 14.00,  category: 'Fun' },
+        { monthOffset: 0, day: 22, name: 'Running Sneakers',       amount: 89.00,  category: 'Shopping' },
+        // Previous month
+        { monthOffset: 1, day: 4,  name: 'Electricity Bill',       amount: 32.40,  category: 'Bills' },
+        { monthOffset: 1, day: 8,  name: 'Taxi Ride',              amount: 9.80,   category: 'Transport' },
+        { monthOffset: 1, day: 13, name: 'Restaurant Dinner',      amount: 47.25,  category: 'Food' },
+        { monthOffset: 1, day: 16, name: 'Concert Ticket',         amount: 35.00,  category: 'Fun' },
+        { monthOffset: 1, day: 20, name: 'Winter Jacket',          amount: 74.50,  category: 'Shopping' },
+        { monthOffset: 1, day: 25, name: 'Internet Bill',          amount: 29.99,  category: 'Bills' },
+        // Two months ago
+        { monthOffset: 2, day: 5,  name: 'Monthly Train Pass',     amount: 60.00,  category: 'Transport' },
+        { monthOffset: 2, day: 11, name: 'Pizza Delivery',         amount: 22.15,  category: 'Food' },
+        { monthOffset: 2, day: 18, name: 'Video Game',             amount: 45.00,  category: 'Fun' },
+        { monthOffset: 2, day: 24, name: 'Book Store',             amount: 27.80,  category: 'Shopping' }
+    ];
+
+    /**
+     * Build demo transactions with dates spread over the last three months.
+     * Dates are always in the past so the UI never shows a future expense.
+     * @returns {Array<Object>} Ready-to-use transactions
+     */
+    function buildDemoTransactions() {
+        const now = new Date();
+
+        return DEMO_TRANSACTIONS_TEMPLATE.map(function(item, index) {
+            const planned = new Date(now.getFullYear(), now.getMonth() - item.monthOffset, item.day, 9, 30, 0);
+            // If the planned day is later than today, step back from now instead
+            const timestamp = planned.getTime() > now.getTime()
+                ? now.getTime() - ((index + 1) * 60 * 60 * 1000)
+                : planned.getTime();
+
+            return {
+                id: generateId(),
+                name: item.name,
+                amount: item.amount,
+                category: item.category,
+                date: new Date(timestamp).toISOString()
+            };
+        });
+    }
+
+    /**
+     * Replace the current data with demo data (transactions, categories, limit).
+     * @returns {Object} A copy of the resulting state
+     */
+    function seedDemoData() {
+        const now = new Date();
+        const currentMonth = now.getFullYear() + '-' +
+            String(now.getMonth() + 1).padStart(2, '0');
+
+        updateState({
+            transactions: buildDemoTransactions(),
+            customCategories: DEMO_CUSTOM_CATEGORIES.slice(),
+            spendingLimit: DEMO_SPENDING_LIMIT,
+            sortOrder: 'date-desc',
+            selectedMonth: currentMonth
+        });
+
+        // Dropdowns are not part of renderAll(), so refresh them here
+        updateCategoryDropdown();
+
+        const monthSelect = document.getElementById('month-select');
+        if (monthSelect) monthSelect.value = currentMonth;
+
+        const sortSelect = document.getElementById('sort-select');
+        if (sortSelect) sortSelect.value = 'date-desc';
+
+        console.log('Demo data loaded: ' + state.transactions.length + ' transactions');
+        return getState();
     }
 
     // ==========================================
@@ -1038,6 +1130,18 @@ const ExpenseTracker = (function() {
                         alert(result.message);
                     }
                 }
+            });
+        }
+
+        // Load demo data button
+        const loadDemoBtn = document.getElementById('load-demo-btn');
+        if (loadDemoBtn) {
+            loadDemoBtn.addEventListener('click', function() {
+                const hasData = state.transactions.length > 0;
+                if (hasData && !window.confirm('Replace your current data with demo data?')) {
+                    return;
+                }
+                seedDemoData();
             });
         }
 
@@ -1193,6 +1297,9 @@ const ExpenseTracker = (function() {
         setTheme: setTheme,
         toggleTheme: toggleTheme,
         applyTheme: applyTheme,
+        // Demo data
+        seedDemoData: seedDemoData,
+        buildDemoTransactions: buildDemoTransactions,
         // Validation (exposed for testing)
         validateName: validateName,
         validateAmount: validateAmount,

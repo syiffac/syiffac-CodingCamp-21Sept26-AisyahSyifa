@@ -119,7 +119,10 @@
 
         <!-- Transaction List Section -->
         <section class="transactions" aria-labelledby="transactions-heading">
-            <h2 id="transactions-heading" class="transactions__title">Transactions</h2>
+            <div class="transactions__header">
+                <h2 id="transactions-heading" class="transactions__title">Transactions</h2>
+                <button id="load-demo-btn" class="transactions__demo-btn" type="button">Load Demo Data</button>
+            </div>
             <ul id="transaction-list" class="transactions__list" role="list">
                 <li class="transactions__empty">No transactions yet. Add your first expense above!</li>
             </ul>
