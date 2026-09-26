@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expense Tracker</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <header class="header">
+        <h1 class="header__title">Expense Tracker</h1>
+        <button id="theme-toggle" class="theme-toggle" aria-label="Toggle theme">
+            <span class="theme-toggle__icon">🌙</span>
+        </button>
+    </header>
+
+    <main class="main">
+        <!-- Balance Section -->
+        <section class="balance" aria-labelledby="balance-heading">
+            <h2 id="balance-heading" class="visually-hidden">Balance Overview</h2>
+            <div class="balance__total">
+                <span class="balance__label">Total Spending</span>
+                <span id="balance-amount" class="balance__amount">$0.00</span>
+            </div>
+            <div class="balance__limit">
+                <div class="balance__limit-header">
+                    <span class="balance__limit-label">Spending Limit</span>
+                    <button id="set-limit-btn" class="balance__limit-btn" aria-label="Set spending limit">Set Limit</button>
+                </div>
+                <div id="limit-display" class="balance__limit-display" hidden>
+                    <span id="limit-amount" class="balance__limit-value">$0.00</span>
+                    <div class="balance__progress">
+                        <div id="progress-bar" class="balance__progress-bar" style="width: 0%"></div>
+                    </div>
+                    <span id="limit-warning" class="balance__warning" hidden>⚠️ Over budget!</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Transaction Form Section -->
+        <section class="form-section" aria-labelledby="form-heading">
+            <h2 id="form-heading" class="visually-hidden">Add Transaction</h2>
+            <form id="transaction-form" class="form">
+                <div class="form__group">
+                    <label for="item-name" class="form__label">Item Name</label>
+                    <input 
+                        type="text" 
+                        id="item-name" 
+                        name="itemName" 
+                        class="form__input" 
+                        placeholder="Enter item name"
+                        autocomplete="off"
+                        required
+                    >
+                    <span id="name-error" class="form__error" hidden></span>
+                </div>
+                <div class="form__group">
+                    <label for="amount" class="form__label">Amount</label>
+                    <input 
+                        type="number" 
+                        id="amount" 
+                        name="amount" 
+                        class="form__input" 
+                        placeholder="0.00"
+                        step="0.01"
+                        min="0.01"
+                        autocomplete="off"
+                        required
+                    >
+                    <span id="amount-error" class="form__error" hidden></span>
+                </div>
+                <div class="form__group">
+                    <label for="category" class="form__label">Category</label>
+                    <select id="category" name="category" class="form__select" required>
+                        <option value="">Select category</option>
+                        <option value="Food">Food</option>
+                        <option value="Transport">Transport</option>
+                        <option value="Fun">Fun</option>
+                    </select>
+                    <span id="category-error" class="form__error" hidden></span>
+                </div>
+                <button type="submit" class="form__submit">Add Transaction</button>
+            </form>
+        </section>
+
+        <!-- Add Category Section -->
+        <section class="category-section" aria-labelledby="category-heading">
+            <h2 id="category-heading" class="visually-hidden">Custom Categories</h2>
+            <div class="category-add">
+                <input 
+                    type="text" 
+                    id="custom-category-input" 
+                    class="category-add__input" 
+                    placeholder="Add custom category"
+                    maxlength="20"
+                    autocomplete="off"
+                >
+                <button id="add-category-btn" class="category-add__btn">Add Category</button>
+            </div>
+            <span id="category-limit-warning" class="category-add__warning" hidden>
+                Maximum 5 custom categories allowed
+            </span>
+        </section>
+
+        <!-- Sort Controls -->
+        <section class="sort-section" aria-labelledby="sort-heading">
+            <h2 id="sort-heading" class="visually-hidden">Sort Transactions</h2>
+            <label for="sort-select" class="sort__label">Sort by:</label>
+            <select id="sort-select" class="sort__select">
+                <option value="date-desc">Newest First</option>
+                <option value="date-asc">Oldest First</option>
+                <option value="amount-desc">Amount (High to Low)</option>
+                <option value="amount-asc">Amount (Low to High)</option>
+                <option value="category-asc">Category (A-Z)</option>
+                <option value="category-desc">Category (Z-A)</option>
+            </select>
+        </section>
+
+        <!-- Transaction List Section -->
+        <section class="transactions" aria-labelledby="transactions-heading">
+            <h2 id="transactions-heading" class="transactions__title">Transactions</h2>
+            <ul id="transaction-list" class="transactions__list" role="list">
+                <li class="transactions__empty">No transactions yet. Add your first expense above!</li>
+            </ul>
+        </section>
+
+        <!-- Monthly Summary Section -->
+        <section class="monthly-summary" aria-labelledby="monthly-heading">
+            <h2 id="monthly-heading" class="monthly-summary__title">Monthly Summary</h2>
+            <div class="monthly-summary__controls">
+                <label for="month-select" class="monthly-summary__label">Select Month:</label>
+                <input type="month" id="month-select" class="monthly-summary__select">
+            </div>
+            <div class="monthly-summary__content">
+                <div class="monthly-summary__total">
+                    <span class="monthly-summary__total-label">Monthly Total:</span>
+                    <span id="monthly-total" class="monthly-summary__total-amount">$0.00</span>
+                </div>
+                <div id="monthly-breakdown" class="monthly-summary__breakdown">
+                    <p class="monthly-summary__empty">No transactions for this month</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Pie Chart Section -->
+        <section class="chart-section" aria-labelledby="chart-heading">
+            <h2 id="chart-heading" class="chart-section__title">Spending by Category</h2>
+            <div class="chart-container">
+                <canvas id="expense-chart" aria-label="Pie chart showing spending distribution by category"></canvas>
+            </div>
+            <div id="chart-fallback" class="chart-fallback" hidden>
+                <p>Chart unavailable. Category breakdown:</p>
+                <ul id="category-breakdown-list" class="chart-fallback__list"></ul>
+            </div>
+        </section>
+    </main>
+
+    <!-- Spending Limit Modal -->
+    <div id="limit-modal" class="modal" hidden aria-labelledby="modal-title">
+        <div class="modal__content">
+            <h3 id="modal-title" class="modal__title">Set Spending Limit</h3>
+            <div class="modal__body">
+                <label for="limit-input" class="modal__label">Enter your monthly spending limit:</label>
+                <input 
+                    type="number" 
+                    id="limit-input" 
+                    class="modal__input" 
+                    placeholder="0.00"
+                    step="0.01"
+                    min="0.01"
+                >
+            </div>
+            <div class="modal__actions">
+                <button id="modal-cancel" class="modal__btn modal__btn--secondary">Cancel</button>
+                <button id="modal-save" class="modal__btn modal__btn--primary">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p class="footer__text">Expense Tracker &copy; 2024</p>
+    </footer>
+
+    <script src="js/app.js"></script>
+</body>
+</html>

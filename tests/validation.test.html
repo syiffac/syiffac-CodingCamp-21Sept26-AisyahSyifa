@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Input Validation Tests</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 1rem;
+        }
+        .test-result {
+            padding: 0.5rem 1rem;
+            margin: 0.5rem 0;
+            border-radius: 4px;
+        }
+        .pass {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+        .fail {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+        .summary {
+            font-size: 1.25rem;
+            font-weight: bold;
+            margin-top: 1rem;
+            padding: 1rem;
+            border-radius: 8px;
+        }
+        .summary.all-pass {
+            background-color: #d1fae5;
+        }
+        .summary.has-failures {
+            background-color: #fee2e2;
+        }
+    </style>
+</head>
+<body>
+    <h1>Input Validation Tests (Task 4.2)</h1>
+    <p>Validates: Requirements 1.2, 1.5</p>
+    <div id="results"></div>
+    
+    <!-- Load the app.js module -->
+    <script src="../js/app.js"></script>
+    
+    <script>
+        // Simple test framework
+        let passed = 0;
+        let failed = 0;
+        const resultsDiv = document.getElementById('results');
+        
+        function test(description, fn) {
+            try {
+                const result = fn();
+                if (result === true) {
+                    passed++;
+                    resultsDiv.innerHTML += `<div class="test-result pass">✓ PASS: ${description}</div>`;
+                } else {
+                    failed++;
+                    resultsDiv.innerHTML += `<div class="test-result fail">✗ FAIL: ${description}<br><small>${result}</small></div>`;
+                }
+            } catch (e) {
+                failed++;
+                resultsDiv.innerHTML += `<div class="test-result fail">✗ ERROR: ${description}<br><small>${e.message}</small></div>`;
+            }
+        }
+        
+        function assertEqual(actual, expected, message) {
+            if (actual === expected) {
+                return true;
+            }
+            return `${message || 'Assertion failed'}: expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`;
+        }
+        
+        // ============================================
+        // Tests for validateName (Requirement 1.2)
+        // ============================================
+        
+        test('validateName: rejects empty string', function() {
+            const result = ExpenseTracker.validateName('');
+            return assertEqual(result.valid, false, 'Empty string should be invalid');
+        });
+        
+        test('validateName: rejects whitespace-only string', function() {
+            const result = ExpenseTracker.validateName('   ');
+            return assertEqual(result.valid, false, 'Whitespace-only should be invalid');
+        });
+        
+        test('validateName: rejects null', function() {
+            const result = ExpenseTracker.validateName(null);
+            return assertEqual(result.valid, false, 'null should be invalid');
+        });
+        
+        test('validateName: rejects undefined', function() {
+            const result = ExpenseTracker.validateName(undefined);
+            return assertEqual(result.valid, false, 'undefined should be invalid');
+        });
+        
+        test('validateName: accepts valid name', function() {
+            const result = ExpenseTracker.validateName('Coffee');
+            return assertEqual(result.valid, true, 'Valid name should be accepted');
+        });
+        
+        test('validateName: accepts name with surrounding whitespace (after trim)', function() {
+            const result = ExpenseTracker.validateName('  Coffee  ');
+            return assertEqual(result.valid, true, 'Name with whitespace should be valid after trim');
+        });
+        
+        test('validateName: returns error message for empty input', function() {
+            const result = ExpenseTracker.validateName('');
+            return assertEqual(result.message !== undefined, true, 'Should return error message');
+        });
+        
+        // ============================================
+        // Tests for validateAmount (Requirement 1.5)
+        // ============================================
+        
+        test('validateAmount: rejects empty string', function() {
+            const result = ExpenseTracker.validateAmount('');
+            return assertEqual(result.valid, false, 'Empty string should be invalid');
+        });
+        
+        test('validateAmount: rejects null', function() {
+            const result = ExpenseTracker.validateAmount(null);
+            return assertEqual(result.valid, false, 'null should be invalid');
+        });
+        
+        test('validateAmount: rejects zero', function() {
+            const result = ExpenseTracker.validateAmount(0);
+            return assertEqual(result.valid, false, 'Zero should be invalid');
+        });
+        
+        test('validateAmount: rejects negative number', function() {
+            const result = ExpenseTracker.validateAmount(-5);
+            return assertEqual(result.valid, false, 'Negative number should be invalid');
+        });
+        
+        test('validateAmount: rejects negative string', function() {
+            const result = ExpenseTracker.validateAmount('-10.50');
+            return assertEqual(result.valid, false, 'Negative string should be invalid');
+        });
+        
+        test('validateAmount: accepts positive number', function() {
+            const result = ExpenseTracker.validateAmount(10.50);
+            return assertEqual(result.valid, true, 'Positive number should be valid');
+        });
+        
+        test('validateAmount: accepts positive string', function() {
+            const result = ExpenseTracker.validateAmount('10.50');
+            return assertEqual(result.valid, true, 'Positive string should be valid');
+        });
+        
+        test('validateAmount: accepts very small positive number', function() {
+            const result = ExpenseTracker.validateAmount(0.01);
+            return assertEqual(result.valid, true, '0.01 should be valid');
+        });
+        
+        test('validateAmount: rejects non-numeric string', function() {
+            const result = ExpenseTracker.validateAmount('abc');
+            return assertEqual(result.valid, false, 'Non-numeric string should be invalid');
+        });
+        
+        test('validateAmount: returns error message for invalid input', function() {
+            const result = ExpenseTracker.validateAmount(-5);
+            return assertEqual(result.message !== undefined, true, 'Should return error message');
+        });
+        
+        // ============================================
+        // Tests for validateCategory (Requirement 1.2)
+        // ============================================
+        
+        test('validateCategory: rejects empty string', function() {
+            const result = ExpenseTracker.validateCategory('');
+            return assertEqual(result.valid, false, 'Empty string should be invalid');
+        });
+        
+        test('validateCategory: rejects null', function() {
+            const result = ExpenseTracker.validateCategory(null);
+            return assertEqual(result.valid, false, 'null should be invalid');
+        });
+        
+        test('validateCategory: accepts valid category', function() {
+            const result = ExpenseTracker.validateCategory('Food');
+            return assertEqual(result.valid, true, 'Valid category should be accepted');
+        });
+        
+        test('validateCategory: accepts Transport', function() {
+            const result = ExpenseTracker.validateCategory('Transport');
+            return assertEqual(result.valid, true, 'Transport should be valid');
+        });
+        
+        test('validateCategory: accepts Fun', function() {
+            const result = ExpenseTracker.validateCategory('Fun');
+            return assertEqual(result.valid, true, 'Fun should be valid');
+        });
+        
+        // ============================================
+        // Tests for validateForm (combined validation)
+        // ============================================
+        
+        test('validateForm: returns errors object with name, amount, category keys', function() {
+            const result = ExpenseTracker.validateForm('', '', '');
+            return assertEqual(
+                result.errors.name !== undefined && 
+                result.errors.amount !== undefined && 
+                result.errors.category !== undefined, 
+                true, 
+                'Should have all error keys'
+            );
+        });
+        
+        test('validateForm: fails when any field is invalid', function() {
+            const result = ExpenseTracker.validateForm('Test', '', 'Food');
+            return assertEqual(result.valid, false, 'Should fail with missing amount');
+        });
+        
+        test('validateForm: passes when all fields are valid', function() {
+            const result = ExpenseTracker.validateForm('Coffee', 5.50, 'Food');
+            return assertEqual(result.valid, true, 'Should pass with all valid fields');
+        });
+        
+        test('validateForm: null errors for valid fields', function() {
+            const result = ExpenseTracker.validateForm('Coffee', 5.50, 'Food');
+            return assertEqual(
+                result.errors.name === null && 
+                result.errors.amount === null && 
+                result.errors.category === null, 
+                true, 
+                'Valid fields should have null errors'
+            );
+        });
+        
+        // Print summary
+        const summaryClass = failed === 0 ? 'all-pass' : 'has-failures';
+        resultsDiv.innerHTML += `
+            <div class="summary ${summaryClass}">
+                Summary: ${passed} passed, ${failed} failed
+            </div>
+        `;
+        
+        // Log to console as well
+        console.log(`Tests complete: ${passed} passed, ${failed} failed`);
+    </script>
+</body>
+</html>

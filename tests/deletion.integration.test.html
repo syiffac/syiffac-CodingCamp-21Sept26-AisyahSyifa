@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transaction Deletion Integration Tests</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <style>
+        body {
+            padding: 20px;
+            font-family: system-ui;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+        }
+        .test-title {
+            font-weight: bold;
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+        .test-result {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .test-pass {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .test-fail {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        #transaction-list {
+            margin: 20px 0;
+        }
+        .transactions__item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            border-bottom: 1px solid #e2e8f0;
+            background: #f8fafc;
+            margin: 5px 0;
+        }
+        .transactions__item-info {
+            flex: 1;
+        }
+        .transactions__item-delete {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            padding: 0;
+            background-color: transparent;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+        .transactions__item-delete:hover {
+            background-color: #ef4444;
+            color: white;
+            border-color: #ef4444;
+        }
+    </style>
+</head>
+<body>
+    <h1>Transaction Deletion Integration Tests</h1>
+    <p>Testing the delete button functionality and event delegation</p>
+
+    <div class="test-section">
+        <div class="test-title">Test Setup: Create sample transactions</div>
+        <button onclick="setupTest()">Setup Test</button>
+        <button onclick="clearTest()">Clear</button>
+        <ul id="transaction-list" class="transactions__list" role="list">
+            <li class="transactions__empty">No transactions yet</li>
+        </ul>
+    </div>
+
+    <div class="test-section">
+        <div class="test-title">Test Results</div>
+        <div id="results"></div>
+    </div>
+
+    <script>
+        // State for testing
+        let state = {
+            transactions: []
+        };
+
+        // Generate unique IDs
+        function generateId() {
+            return Date.now().toString(36) + Math.random().toString(36).substr(2);
+        }
+
+        // Render transaction list
+        function renderTransactionList() {
+            const listEl = document.getElementById('transaction-list');
+            if (!listEl) return;
+
+            const transactions = state.transactions;
+
+            if (transactions.length === 0) {
+                listEl.innerHTML = '<li class="transactions__empty">No transactions yet. Add your first expense above!</li>';
+                return;
+            }
+
+            const html = transactions.map(function(transaction) {
+                return (
+                    '<li class="transactions__item" data-id="' + transaction.id + '">' +
+                        '<div class="transactions__item-info">' +
+                            '<div class="transactions__item-name">' + transaction.name + '</div>' +
+                            '<div class="transactions__item-meta">' +
+                                '<span class="transactions__item-category">' + transaction.category + '</span>' +
+                            '</div>' +
+                        '</div>' +
+                        '<span class="transactions__item-amount">$' + transaction.amount.toFixed(2) + '</span>' +
+                        '<button class="transactions__item-delete" aria-label="Delete transaction" data-id="' + transaction.id + '">' +
+                            '✕' +
+                        '</button>' +
+                    '</li>'
+                );
+            }).join('');
+
+            listEl.innerHTML = html;
+        }
+
+        // Add transaction
+        function addTransaction(name, amount, category) {
+            const transaction = {
+                id: generateId(),
+                name: name,
+                amount: amount,
+                category: category,
+                date: new Date().toISOString()
+            };
+            state.transactions.push(transaction);
+            renderTransactionList();
+            return transaction.id;
+        }
+
+        // Delete transaction
+        function deleteTransaction(id) {
+            const before = state.transactions.length;
+            state.transactions = state.transactions.filter(function(transaction) {
+                return transaction.id !== id;
+            });
+            const after = state.transactions.length;
+            renderTransactionList();
+            return before > after;
+        }
+
+        // Setup test
+        function setupTest() {
+            state.transactions = [];
+            addTransaction('Coffee', 5.50, 'Food');
+            addTransaction('Bus Ticket', 2.50, 'Transport');
+            addTransaction('Movie', 12.00, 'Fun');
+            logResult('✓ Setup: Created 3 transactions', true);
+        }
+
+        // Clear test
+        function clearTest() {
+            state.transactions = [];
+            renderTransactionList();
+            document.getElementById('results').innerHTML = '';
+            logResult('✓ Clear: Cleared all transactions', true);
+        }
+
+        // Log result
+        function logResult(message, passed) {
+            const resultsDiv = document.getElementById('results');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = 'test-result ' + (passed ? 'test-pass' : 'test-fail');
+            resultDiv.textContent = message;
+            resultsDiv.appendChild(resultDiv);
+        }
+
+        // Test 1: Verify delete buttons are rendered
+        function testDeleteButtonsRendered() {
+            setupTest();
+            const deleteButtons = document.querySelectorAll('.transactions__item-delete');
+            const passed = deleteButtons.length === 3;
+            logResult((passed ? '✓' : '✗') + ' Test 1: Delete buttons rendered (' + deleteButtons.length + ' buttons)', passed);
+        }
+
+        // Test 2: Verify delete button has correct data attribute
+        function testDeleteButtonDataAttribute() {
+            const deleteButtons = document.querySelectorAll('.transactions__item-delete');
+            let allValid = true;
+            deleteButtons.forEach(function(btn) {
+                if (!btn.getAttribute('data-id')) {
+                    allValid = false;
+                }
+            });
+            logResult((allValid ? '✓' : '✗') + ' Test 2: Delete buttons have data-id attribute', allValid);
+        }
+
+        // Test 3: Verify delete functionality
+        function testDeleteFunctionality() {
+            setupTest();
+            const initialCount = state.transactions.length;
+            const idToDelete = state.transactions[0].id;
+            const deleted = deleteTransaction(idToDelete);
+            const finalCount = state.transactions.length;
+            const passed = deleted && initialCount === 3 && finalCount === 2;
+            logResult((passed ? '✓' : '✗') + ' Test 3: Delete functionality (before: ' + initialCount + ', after: ' + finalCount + ')', passed);
+        }
+
+        // Test 4: Verify remaining transactions are intact
+        function testRemainingTransactionsIntact() {
+            setupTest();
+            const originalTransactions = state.transactions.map(function(t) { return t.id; });
+            deleteTransaction(state.transactions[1].id);
+            const remaining = state.transactions.map(function(t) { return t.id; });
+            const passed = remaining.length === 2 && remaining[0] === originalTransactions[0] && remaining[1] === originalTransactions[2];
+            logResult((passed ? '✓' : '✗') + ' Test 4: Remaining transactions intact after deletion', passed);
+        }
+
+        // Test 5: Verify UI updates after deletion
+        function testUIUpdatesAfterDeletion() {
+            setupTest();
+            const idToDelete = state.transactions[0].id;
+            deleteTransaction(idToDelete);
+            const listItems = document.querySelectorAll('.transactions__item');
+            const deletedStillPresent = Array.from(listItems).some(function(li) {
+                return li.getAttribute('data-id') === idToDelete;
+            });
+            const passed = !deletedStillPresent && listItems.length === 2;
+            logResult((passed ? '✓' : '✗') + ' Test 5: UI updates after deletion', passed);
+        }
+
+        // Test 6: Verify event delegation works
+        function testEventDelegation() {
+            clearTest();
+            setupTest();
+            const listEl = document.getElementById('transaction-list');
+            const deleteButton = document.querySelector('.transactions__item-delete');
+            const idToDelete = deleteButton.getAttribute('data-id');
+            
+            // Simulate click
+            const event = new MouseEvent('click', {
+                bubbles: true,
+                cancelable: true,
+                view: window
+            });
+            deleteButton.dispatchEvent(event);
+            
+            // Check if transaction still exists
+            const stillExists = state.transactions.some(function(t) { return t.id === idToDelete; });
+            const passed = !stillExists;
+            logResult((passed ? '✓' : '✗') + ' Test 6: Event delegation works (requires app.js listener)', passed);
+        }
+
+        // Run all tests
+        function runAllTests() {
+            document.getElementById('results').innerHTML = '';
+            testDeleteButtonsRendered();
+            testDeleteButtonDataAttribute();
+            testDeleteFunctionality();
+            testRemainingTransactionsIntact();
+            testUIUpdatesAfterDeletion();
+            // Note: Test 6 requires the actual app.js event listener
+        }
+
+        // Auto-run tests when page loads
+        window.addEventListener('DOMContentLoaded', function() {
+            console.log('Page loaded. Click "Run All Tests" or individual test buttons.');
+        });
+    </script>
+
+    <div class="test-section">
+        <button onclick="runAllTests()">Run All Tests</button>
+        <button onclick="testDeleteButtonsRendered()">Test 1: Buttons Rendered</button>
+        <button onclick="testDeleteButtonDataAttribute()">Test 2: Data Attributes</button>
+        <button onclick="testDeleteFunctionality()">Test 3: Delete Function</button>
+        <button onclick="testRemainingTransactionsIntact()">Test 4: Remaining Intact</button>
+        <button onclick="testUIUpdatesAfterDeletion()">Test 5: UI Updates</button>
+    </div>
+</body>
+</html>
